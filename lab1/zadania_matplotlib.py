@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D # Without this projection='3d' is not recognized
 
 
@@ -44,7 +45,24 @@ def convex_comb_general(points, limit=1.0, step_arange=0.1, tabs=""):
     :return: list of points, each represented as np.array.
     """
     # TODO: Zadanie 4.2: Rekurencyjna implementacja (albo zupełnie własna, rekurencja to propozycja).
-    return []
+    DELTA = 1e-5
+    def lims(length, limit, step):
+        if length == 1:
+            yield [limit]
+        else:
+            for lim in np.arange(0, limit + DELTA, step=step):
+                for lambdas in lims(length - 1, limit - lim, step):
+                    yield [lim] + lambdas
+
+    convex_comb = []
+    if len(points) == 0:
+        return convex_comb
+
+    np_points = np.array(points).T
+    for lambdas in lims(len(points), limit, step_arange):
+        convex_comb.append(np.matmul(np_points, np.array(lambdas)))
+
+    return np.array(convex_comb)
 
 
 def convex_comb_triangle_loop(points):
@@ -55,11 +73,21 @@ def convex_comb_triangle_loop(points):
     """
     assert len(points) == 3
     # TODO: Zadanie 4.1: Implementacja za pomocą pętli obliczenia wypukłych kombinacji liniowych dla wierzchołków trójkąta.
-    return []
+    combinations = []
+    for lam1 in np.linspace(0, 1, 10):
+        for lam2 in np.linspace(0, 1, 10):
+            lam3 = 1 - (lam1 + lam2)
+            if lam3 >= 0:
+                combinations.append(
+                    np.matmul(np.array(points).T, np.array([lam1, lam2, lam3]))
+                )
+    return np.array(combinations)
 
 
 def draw_convex_combination_2d(points, cc_points):
     # TODO: Zadanie 4.1: Rysowanie wykresu dla wygenerowanej listy punktów (cc_points).
+
+    plt.scatter(cc_points[:, 0], cc_points[:, 1])
 
     # Drawing contour of the figure (with plt.plot).
     draw_contour_2d(points)
@@ -75,6 +103,9 @@ def draw_convex_combination_3d(points, cc_points, sides=None, color_z=True):
     ax.set_zlabel('Z')
     # TODO: Zadanie 4.3: Zaimplementuj rysowanie wykresu 3D dla cc_points. Możesz dodatkowo zaimplementować kolorowanie względem wartości na osi z.
 
+    z_colours = [cm.Reds((z + 1)/2) for z in (cc_points[:, 2] - np.min(cc_points[:, 2]))/np.ptp(cc_points[:, 2])]
+    ax.scatter(cc_points[:, 0], cc_points[:, 1], cc_points[:, 2], c=z_colours)
+
     # Drawing contour of the figure (with plt.plot).
     if sides is not None:
         draw_contour_3d(points, sides)
@@ -88,6 +119,9 @@ def draw_vector_addition(vectors, coeffs):
         # TODO: Zadanie 4.4: Wzorując się na poniższym użyciu funkcji plt.arrow, napisz kod rysujący wektory składowe.
         # TODO: Każdy kolejny wektor powininen być rysowany od punktu, w którym zakończył się poprzedni wektor.
         # TODO: Pamiętaj o przeskalowaniu wektorów przez odpowiedni współczynnik.
+        vector = np.array(v) * c
+        plt.arrow(start[0], start[1], vector[0], vector[1], width=0.01, head_width=0.1, head_length=0.1, color="green", zorder=4, length_includes_head=True)
+        start = vector
 
     # Drawing the final vector being a linear combination of the given vectors.
     # The third and the fourth arguments of the plt.arrow function indicate movement (dx, dy), not the ending point.
@@ -204,15 +238,15 @@ if __name__ == "__main__":
     draw_triangle_simple_2()
 
     # for task 4.2
-    # draw_triangle_1()
-    # draw_triangle_2()
-    # draw_rectangle()
-    # draw_hexagon()
-    # draw_not_convex()
+    draw_triangle_1()
+    draw_triangle_2()
+    draw_rectangle()
+    draw_hexagon()
+    draw_not_convex()
 
     # for task 4.3
-    # draw_tetrahedron()
-    # draw_cube()
+    draw_tetrahedron()
+    draw_cube()
 
     # for task 4.4
-    # draw_vector_addition_ex1()
+    draw_vector_addition_ex1()
