@@ -4,6 +4,7 @@ import os
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 
 
 def pca_sklearn(data, n_comp=None):
@@ -20,7 +21,8 @@ def pca_sklearn(data, n_comp=None):
         n_comp = data.shape[1]
     # TODO: Implement PCA using scikit-learn library, class: sklearn.decomposition.PCA
     # TODO: Return the transformed data.
-    return None
+    pca = PCA(n_comp)
+    return pca.fit_transform(data)
 
 
 
@@ -37,49 +39,45 @@ def pca_manual(data, n_comp=None):
         n_comp = data.shape[1]
 
     # TODO: 1) Adjust the data so that the mean of every column is equal to 0.
-
-
+    mean_centered = data - np.mean(data.T, axis=1)
 
     # TODO: 2) Compute the covariance matrix. You can use the function from numpy (numpy.cov), or multiply appropriate matrices.
     # Warning: numpy.cov expects dimensions to be in rows and different observations in columns.
     #          You can transpose data or set rowvar=False flag.
-
+    covariance = np.cov(mean_centered.T)
     print("\nCOVARIANCE MATRIX:")
-    print("TODO")
-
-
+    print(covariance)
 
     # TODO: 3) Calculate the eigenvectors and eigenvalues of the covariance matrix.
     # You may use np.linalg.eig, which returns a tuple (eigval, eigvec).
     # Make sure that eigenvectors are unit vectors (PCA needs unit vectors).
-
-
+    values, vectors = np.linalg.eig(covariance)
 
     # TODO: 4) Sort eigenvalues (and their corresponding eigenvectors) in the descending order (e.g. by using argsort),
     #          and construct the matrix K with eigenvectors in the columns.
+    sort_index = np.argsort(values)[::-1]
+    values = values[sort_index]
+    vectors = vectors[sort_index]
 
     print("\nSORTED EIGEN VALUES:")
-    print("TODO")
+    print(values)
     print("\nSORTED EIGEN VECTORS:")
-    print("TODO")
-
-
+    print(vectors)
 
     # TODO: 5) Select the components (n_comp).
-
-
+    components = vectors[:n_comp]
 
     # TODO: 6) Calculate the transformed data.
-
-
+    transformed = components.T.dot(mean_centered.T)
 
     # TODO: 7) Calculate the covariance matrix of the transformed data.
+    covariance_transformed = np.cov(transformed)
 
     print("\nCOVARIANCE MATRIX OF THE TRANSFORMED DATA:")
-    print("TODO")
+    print(covariance_transformed)
 
     # TODO: 8) Return the transformed data.
-    return None
+    return transformed.T
 
 
 
@@ -136,6 +134,13 @@ def data_example1():
     dirname = os.path.dirname(os.path.realpath(__file__))
     path = os.path.join(dirname, 'data', 'example1.csv')
     return np.genfromtxt(path, delimiter=',')
+
+
+def normalize(vector):
+    norm = np.linalg.norm(vector)
+    if norm == 0:
+       return vector
+    return vector / norm
 
 
 if __name__ == "__main__":
